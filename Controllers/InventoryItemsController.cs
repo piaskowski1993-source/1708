@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using HardwareStoreApi.Data;
 using HardwareStoreApi.Model;
@@ -13,9 +14,30 @@ public class InventoryItemsController : ControllerBase
     public InventoryItemsController (AppDbContext context) {_context = context;}
 
     [HttpGet]
-    public async Task <ActionResult<IEnumerable<InventoryItem>>>GetInventoryItems()
-    {throw new NotImplementedException();}
+    public async Task <ActionResult<IEnumerable<InventoryItem>>>GetInventoryItems(
+    string? category,
+    string? sortBy,
+    int page = 1,
+    int pageSize = 10)
+    {
+        IQueryable <InventoryItem> query = _context.InventoryItem;
+        if(!string.IsNullOrEmpty(category))
+        {
+            query = query.Where(i =>i.Category == category);
+        }
+            query = sortBy?.ToLower()switch
+        {
+         "price" => query.OrderBy(i => i.Price),
+         "quantity" => query.OrderBy (i => i.Quantity),
+          _ => query.OrderBy (i => i.Name)        
+        };
+        var items = await query
+        .Skip((page -1) * pageSize)
+        .Take(pageSize)
+        .ToListAsync();
 
+        return Ok(items);
+    }
     [HttpGet("{id}")]
     public async Task <ActionResult<InventoryItem>>GetInventoryItem(int id)
     {throw new NotImplementedException();}
