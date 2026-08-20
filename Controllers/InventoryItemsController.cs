@@ -40,11 +40,22 @@ public class InventoryItemsController : ControllerBase
     }
     [HttpGet("{id}")]
     public async Task <ActionResult<InventoryItem>>GetInventoryItem(int id)
-    {throw new NotImplementedException();}
+    {
+        var item = await _context.InventoryItem.FindAsync(id);
+        if (item == null)
+        {
+            return NotFound ($"Item with id {id} not found.");
+        }
+        return Ok(item);
+    }
 
     [HttpPost]
     public async Task <ActionResult<InventoryItem>>CreateInventoryItem(InventoryItem item)
-    {throw new NotImplementedException();}
+    {_context.InventoryItem.Add(item);
+    await _context.SaveChangesAsync();
+    return CreatedAtAction(nameof(GetInventoryItem),
+    new {id = item.Id}, item);
+    }
 }
 
 
